@@ -96,7 +96,6 @@ def connect_subscriptions(my_thing):
     # Note:
     #  In sub_list, 'id' is the Feed/Control global point ID (gpid)
     sub_list = my_thing.list_connections()
-    print("Subscription list: ", sub_list)
 
     # Get global Point ID (gpid) from this information and wire up the follow to the callback
     for key in sub_list:
@@ -119,11 +118,12 @@ def main():
     with IOT.Client(config='Getting_Started.ini') as client:  # ADD OWN CONFIG .ini HERE
         my_thing = connect_thing(client)
         show_metadata(my_thing)
-        connect_subscriptions(my_thing)
+        
 
         while True:
             try:
                 print("Main running, press ctrl+c to quit.")
+                connect_subscriptions(my_thing)
                 time.sleep(10)
             except KeyboardInterrupt:
                 break
