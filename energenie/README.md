@@ -1,15 +1,17 @@
-# Energenie 2
+# Energenie
 Use @whaleygeek's OO pyenergenie code to talk to motion sensors, open sensors and monitoring plugs without a need for an interim csv file.
 
 
 ## Why?
-Originally for FWIC16 Innovation Showcase
+Originally for FWIC16 Innovation Showcase, but now available for public use
 
 Can be modified and adapted for other uses with any of the sensors controlled by @whaleygeek's stuff
 
 ## What?
-Iotic/Energenies come in two flavours
-1. [mihome_iotic.py](./myhome_iotic.py) - Old-school version based on @whaleygeek's example: mihome_energy_monitor.py
+Iotic/Energenies come in two flavours:
+
+1. [mihome_iotic.py](./mihome_iotic.py) - Old-school version based on @whaleygeek's example: mihome_energy_monitor.py
+
 2. [discovery.py](./discovery.py) - New-school version using Iotic ThingRunner and values - more properly OO
 
 ## How?
