@@ -32,7 +32,7 @@ class IoticSocket(object):
     thing_description = 'Energenie plug using new iotic style and new energenie code'
     # Set to None to not have location set
     thing_location = (51.4826, -0.0077)
-    thing_tags = ['Energenie', 'MNJW']
+    thing_tags = ['Energenie', 'Your Tag Here']
     # Set to False to not make metadata about self.__thing and its feeds & controls public
     # NOTE: Value-based feed/control data usage (e.g. get_skeleton) will not work if not public!
     thing_public = True
@@ -52,10 +52,10 @@ class IoticSocket(object):
            device: Energenie device object
         """
         if client is None:
-            raise ValueError("must specify energenie client")
+            raise ValueError("must specify an Iotic client")
         self.__client = client
         if device is None:
-            raise ValueError("must specify energenie device")
+            raise ValueError("must specify an energenie device")
         self.__device = device
 
         self.__thing = None
