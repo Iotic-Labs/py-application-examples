@@ -20,7 +20,7 @@ logging.basicConfig(format='%(asctime)s,%(msecs)03d %(levelname)s [%(name)s] {%(
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
-from ThingRunner import ThingRunner
+from IoticAgent import ThingRunner
 from IoticSocket import IoticSocket
 import energenie
 
