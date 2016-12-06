@@ -1,7 +1,7 @@
 # py-application-examples
 Example python applications for Iotic Space (using Python Agent)
 
-### [Agent Tutorials](agent_tutorial_code|/getting_started/)
+### [Agent Tutorials](agent_tutorial_code/getting_started/)
 Code examples that follow the tutorials on the developer website
 
 ### [Energenie](energenie/)
