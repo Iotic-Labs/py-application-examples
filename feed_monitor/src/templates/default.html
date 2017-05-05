@@ -1,0 +1,62 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN"
+"http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="refresh" content="5">
+<style type="text/css">
+#bighead {
+    width: 100%;
+    height: 48px;
+    background-color: rgb(237, 237, 237);
+    font-size: 36px;
+}
+.red {
+	background: #f00;
+}
+.yellow {
+	background: #ff0;
+}
+.green {
+	background: #0f0;
+}
+.circle {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+}
+table {
+    width: 100%;
+    max-width: 800px;
+}
+th {
+    text-align: left;
+}
+td {
+    padding-right: 10px;
+}
+</style>
+<title>Iotic Labs Simple Feed Monitor</title>
+</head>
+
+<body>
+<div id="bighead">Iotic Labs Simple Feed Monitor</div>
+
+<table>
+<tr>
+    <th>RAG</th>
+    <th>Name</th>
+    <th>Last seen</th>
+</tr>
+{% for guid, data in feeds.items() %}
+    <tr>
+        <td><div class="circle {{ data.class }}"></div></td>
+        <td>{{ data.name }}</td>
+        <td>{{ data.lastseen }}</td>
+    </tr>
+{% endfor %}
+</table>
+
+</body>
+
+</html>

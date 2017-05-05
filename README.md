@@ -12,3 +12,6 @@ Example "chat room" application showing feed following and dynamic binding
 
 ### [mqtt_bridge](mqtt_bridge/)
 Simple MQTT to IoticAgent bridge
+
+### [feed_monitor](feed_monitor/)
+Simple Feed Monitor
