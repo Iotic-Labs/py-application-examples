@@ -15,3 +15,6 @@ Simple MQTT to IoticAgent bridge
 
 ### [feed_monitor](feed_monitor/)
 Simple Feed Monitor
+
+### [Thing Runner Examples](thing_runner/)
+Examples using the ThingRunner class showing many aspects of the
