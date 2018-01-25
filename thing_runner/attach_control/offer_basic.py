@@ -28,7 +28,7 @@ class OfferBasic(RetryingThingRunner):
         pass
 
     def __callback_parsed(self, args):
-        logger.debug("Control request received. Requested at %s", args['time'])
+        logger.debug("Control request received.")
 
         values = args['parsed'].filter_by(types=(Datatypes.DECIMAL,), units=(Units.CELSIUS,), text=("thermostat",))
         if values:
