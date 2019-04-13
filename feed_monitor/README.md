@@ -93,8 +93,8 @@ Download or clone the code from the repo.
 
 To run the Monitor you'll need these dependencies
 
-2. [IoticAgent](https://pypi.python.org/pypi/py-IoticAgent/0.4.1)
-1. [rdflib](https://pypi.python.org/pypi/rdflib)
+1. [IoticAgent](https://pypi.python.org/pypi/py-IoticAgent)
+2. [rdflib](https://pypi.python.org/pypi/rdflib)
 
 It's up to you how you install these and set your PYTHONPATH to access them.  I did from the root of this repo by
 using the requirements.txt file to install the dependencies in the 3rd directory...
