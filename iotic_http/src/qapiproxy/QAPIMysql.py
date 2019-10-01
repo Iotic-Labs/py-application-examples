@@ -57,25 +57,55 @@ class QAPIMysql(object):
 
     def config_list(self):
         ret = []
-        conn, cur = self.__get_conncur()
+        try:
+            conn, cur = self.__get_conncur()
+        except:
+            logger.error("Exception getting DB Cursor")
+            return None
         try:
             cur.execute("SELECT `epId` FROM `qaconfig`;")
             for row in cur.fetchall():
                 ret.append(row[0])
         except:
-            raise
-        self.__close_conncur(conn, cur)
+            logger.error("Exception getting DB config rows")
+            return None
+        try:
+            self.__close_conncur(conn, cur)
+        except:
+            pass
         return ret
 
     def config_read(self, userid):
         ret = None
-        conn, cur = self.__get_conncur()
+        try:
+            conn, cur = self.__get_conncur()
+        except:
+            logger.error("Exception getting DB Cursor")
+            return ret
         try:
             cur.execute("SELECT host, vhost, prefix, epId, passwd, token FROM qaconfig WHERE epId = '%s';"
                         % str(userid))
             for row in cur.fetchall():
                 ret = self.__dict_factory(cur, row)
         except:
-            raise
-        self.__close_conncur(conn, cur)
+            logger.error("Exception getting DB config row by epid")
+            return ret
+        try:
+            self.__close_conncur(conn, cur)
+        except:
+            pass
         return ret
+
+    def prune(self):
+        try:
+            conn, cur = self.__get_conncur()
+        except:
+            logger.error("Exception getting DB Cursor")
+        try:
+            cur.execute("DELETE q FROM qaconfig q LEFT OUTER JOIN coreuser c USING (ownuser_id) WHERE c.core_id IS NULL;")
+        except:
+            logger.error("Exception pruning qaconfig table", exc_info=True)
+        try:
+            self.__close_conncur(conn, cur)
+        except:
+            pass

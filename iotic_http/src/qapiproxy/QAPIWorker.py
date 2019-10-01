@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 
 from threading import Thread, Event
 from queue import Queue
-from time import sleep, monotonic
+from time import monotonic
 
 from IoticAgent import Core as IoticAgentCore
 
@@ -36,11 +36,13 @@ class QAPIWorker(object):
                  keepFeeddata=DATA_KEEP,
                  keepControlreq=DATA_KEEP,
                  keepUnsolicited=DATA_KEEP,
-                 sleepOnIdle=SLEEP_ON_IDLE):
+                 sleepOnIdle=SLEEP_ON_IDLE,
+                 workerExtra=None):
         #
         self.__details = details
         self.__stop = Event()
         self.__managerStop = managerStop
+        self.__workerExtra = workerExtra
 
         self.__keepFeeddata = 0
         try:
@@ -118,7 +120,9 @@ class QAPIWorker(object):
 
     def stop(self):
         self.__stop.set()
-        self.__thread.join()
+        if self.__thread is not None:
+            self.__thread.join()
+        self.__thread = None
 
     def __wake_agent(self):
         if not self.__qc_running:
@@ -333,12 +337,22 @@ class QAPIWorker(object):
             try:
                 self.__wake_agent()
             except:
-                logger.error("Worker %s FAILED TO START sleep(%i)...", self.__details['epid'], self.__dead_sleep)
+                logger.error("Worker %s FAILED TO START sleeping %i...", self.__details['epid'], self.__dead_sleep)
                 done = False
                 dead_count += 1
-                sleep(self.__dead_sleep)
+                self.__stop.wait(self.__dead_sleep)
         if dead_count >= self.__dead_max:
             return
+        #
+        # Start WorkerExtra if imported.
+        we = None
+        if self.__workerExtra is not None:
+            try:
+                we = self.__workerExtra(self.__qc)
+                we.start()
+            except:
+                logger.error("Failed to init & start WorkerExtra", exc_info=True)
+                raise
         #
         self.__qc.register_callback_feeddata(self.__cb_feeddata)
         self.__qc.register_callback_controlreq(self.__cb_controlreq)
@@ -350,10 +364,15 @@ class QAPIWorker(object):
             self.__stop.wait(self.__polltime)
             #
             if self.__qc_running and (monotonic() - self.__qc_last > self.__sleep_on_idle):
-                logger.info("QAPIWorker %s Sleeping", self.__details['epid'])
+                logger.debug("QAPIWorker %s Sleeping", self.__details['epid'])
                 self.__qc.stop()
                 self.__qc_running = False
         # Clean-up
+        if we is not None:
+            try:
+                we.stop()
+            except:
+                logger.error("Failed to stop WorkerExtra", exc_info=True)
         try:
             self.__qc.stop()
         except:

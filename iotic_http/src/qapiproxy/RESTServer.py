@@ -16,6 +16,7 @@
 import logging
 logger = logging.getLogger(__name__)
 
+from importlib import import_module
 from json import loads, dumps
 from base64 import b64encode
 from ssl import SSLContext, CERT_REQUIRED, OP_NO_COMPRESSION, PROTOCOL_TLSv1_2, RAND_add
@@ -165,6 +166,7 @@ class Handler(BaseHTTPRequestHandler):
                 self.wfile.write(payload)
         except:
             logger.error("Failed to send_resp, client closed connection?")
+        return code
 
     def __path_arg(self, num):
         try:
@@ -209,7 +211,7 @@ class Handler(BaseHTTPRequestHandler):
             authToken = self.headers['AuthToken']
         return epId, authToken
 
-    def __qapi_call(self, func, *args, **kwargs):  # noqa (complexity)
+    def _qapi_call(self, func, *args, **kwargs):  # noqa (complexity)
         try:
             epId, authToken = self.__get_epid_headers()
             evt = func(epId, authToken, *args, **kwargs)
@@ -304,7 +306,7 @@ class Handler(BaseHTTPRequestHandler):
             foc = self.__str_to_foc()
             lid = self.__path_arg(3)
             pid = self.__path_arg(4)
-            return self.__qapi_call(
+            return self._qapi_call(
                 self.__qapiManager.request_point_value_create,
                 lid,
                 pid,
@@ -317,7 +319,7 @@ class Handler(BaseHTTPRequestHandler):
         elif self.path.startswith('/sub'):
             return self.__do_POST_sub(payload)
         elif self.path.startswith('/search'):
-            return self.__qapi_call(
+            return self._qapi_call(
                 self.__qapiManager.request_search,
                 text=payload['text'] if 'text' in payload else None,
                 lang=payload['lang'] if 'lang' in payload else None,
@@ -328,7 +330,7 @@ class Handler(BaseHTTPRequestHandler):
                 limit=limit,
                 offset=offset)
         elif self.path.startswith('/describe'):
-            return self.__qapi_call(
+            return self._qapi_call(
                 self.__qapiManager.request_describe,
                 payload['guid'] if 'guid' in payload else '',
                 scope=IoticAgentCore.Const.DescribeScope(payload.get('scope', IoticAgentCore.Const.DescribeScope.AUTO)))
@@ -337,13 +339,13 @@ class Handler(BaseHTTPRequestHandler):
 
     def __do_POST_entity(self, payload, lang):
         if self.path == '/entity':
-            return self.__qapi_call(
+            return self._qapi_call(
                 self.__qapiManager.request_entity_create,
                 payload['lid'] if 'lid' in payload else None,
                 tepid=payload['epId'] if 'epId' in payload else None)
         elif self.path.endswith('/tag'):
             lid = self.__path_arg(2)
-            return self.__qapi_call(
+            return self._qapi_call(
                 self.__qapiManager.request_entity_tag_update,
                 lid,
                 payload['tags'] if 'tags' in payload else [])
@@ -357,7 +359,7 @@ class Handler(BaseHTTPRequestHandler):
                                                         authToken,
                                                         lid,
                                                         payload['tags'] if 'tags' in payload else [])
-            self.__send_resp(code, resp)
+            return self.__send_resp(code, resp)
         #
         else:
             return self.__send_resp(400, {'error': 'malformed'})
@@ -367,7 +369,7 @@ class Handler(BaseHTTPRequestHandler):
         if self.path.endswith('/tag'):
             lid = self.__path_arg(3)
             pid = self.__path_arg(4)
-            return self.__qapi_call(
+            return self._qapi_call(
                 self.__qapiManager.request_point_tag_update,
                 foc,
                 lid,
@@ -376,7 +378,7 @@ class Handler(BaseHTTPRequestHandler):
         elif self.path.endswith('/share'):
             lid = self.__path_arg(2)
             pid = self.__path_arg(3)
-            return self.__qapi_call(
+            return self._qapi_call(
                 self.__qapiManager.request_point_share,
                 lid,
                 pid,
@@ -395,10 +397,10 @@ class Handler(BaseHTTPRequestHandler):
                                                        lid,
                                                        pid,
                                                        payload['tags'] if 'tags' in payload else [])
-            self.__send_resp(code, resp)
+            return self.__send_resp(code, resp)
         #
         else:
-            return self.__qapi_call(
+            return self._qapi_call(
                 self.__qapiManager.request_point_create,
                 foc,
                 payload['lid'] if 'lid' in payload else '',
@@ -410,27 +412,27 @@ class Handler(BaseHTTPRequestHandler):
         lid = self.__path_arg(3)
         if self.path.endswith('/ask'):
             subid = self.__path_arg(2)
-            return self.__qapi_call(
+            return self._qapi_call(
                 self.__qapiManager.request_sub_ask,
                 subid,
                 payload['data'] if 'data' in payload else '',
                 payload['mime'] if 'mime' in payload else None)
         elif self.path.endswith('/tell'):
             subid = self.__path_arg(2)
-            return self.__qapi_call(
+            return self._qapi_call(
                 self.__qapiManager.request_sub_tell,
                 subid,
                 payload['data'] if 'data' in payload else '',
                 payload['mime'] if 'mime' in payload else None)
         elif 'gpid' in payload:
-            return self.__qapi_call(
+            return self._qapi_call(
                 self.__qapiManager.request_sub_create,
                 lid,
                 foc,
                 payload['gpid'])
         elif 'slid' in payload:
             pid = self.__path_arg(4)
-            return self.__qapi_call(
+            return self._qapi_call(
                 self.__qapiManager.request_sub_create_local,
                 payload['slid'],
                 foc,
@@ -454,7 +456,7 @@ class Handler(BaseHTTPRequestHandler):
             foc = self.__str_to_foc()
             lid = self.__path_arg(3)
             pid = self.__path_arg(4)
-            return self.__qapi_call(
+            return self._qapi_call(
                 self.__qapiManager.request_point_value_list,
                 lid,
                 pid,
@@ -514,12 +516,12 @@ class Handler(BaseHTTPRequestHandler):
 
     def __do_GET_entity(self, lang, limit, offset):  # pylint: disable=too-many-return-statements
         if self.path == '/entity':
-            return self.__qapi_call(
+            return self._qapi_call(
                 self.__qapiManager.request_entity_list,
                 limit=limit,
                 offset=offset)
         elif self.path.endswith('/all'):
-            return self.__qapi_call(
+            return self._qapi_call(
                 self.__qapiManager.request_entity_list_all,
                 limit=limit,
                 offset=offset)
@@ -528,13 +530,13 @@ class Handler(BaseHTTPRequestHandler):
             fmt = self.__path_arg(3)
             if fmt == 'meta':
                 fmt = 'n3'
-            return self.__qapi_call(
+            return self._qapi_call(
                 self.__qapiManager.request_entity_meta_get,
                 lid,
                 fmt)
         elif self.path.endswith('/tag'):
             lid = self.__path_arg(2)
-            return self.__qapi_call(
+            return self._qapi_call(
                 self.__qapiManager.request_entity_tag_list,
                 lid,
                 limit=limit,
@@ -546,14 +548,14 @@ class Handler(BaseHTTPRequestHandler):
             lid = self.__path_arg(2)
             code, resp = RDFHelper.get_meta_entity_tags(self.__qapiManager, epId, authToken, lid, limit=limit,
                                                         offset=offset)
-            self.__send_resp(code, resp)
+            return self.__send_resp(code, resp)
         elif self.path.endswith('/metahelper'):
             if lang is None:
                 return self.__send_resp(400, {'error': 'X-Language must be specified for metahelper functions'})
             epId, authToken = self.__get_epid_headers()
             lid = self.__path_arg(2)
             code, resp = RDFHelper.get_meta_entity(self.__qapiManager, epId, authToken, lid, lang)
-            self.__send_resp(code, resp)
+            return self.__send_resp(code, resp)
         #
         else:
             return self.__send_resp(400, {'error': 'malformed'})
@@ -564,14 +566,14 @@ class Handler(BaseHTTPRequestHandler):
         pid = self.__path_arg(4)
         if self.path.endswith('/meta'):
             fmt = self.__path_arg(5)
-            return self.__qapi_call(
+            return self._qapi_call(
                 self.__qapiManager.request_point_meta_get,
                 foc,
                 lid,
                 pid,
                 fmt)
         elif self.path.endswith('/tag'):
-            return self.__qapi_call(
+            return self._qapi_call(
                 self.__qapiManager.request_point_tag_list,
                 foc,
                 lid,
@@ -588,23 +590,23 @@ class Handler(BaseHTTPRequestHandler):
                                                        pid,
                                                        limit=limit,
                                                        offset=offset)
-            self.__send_resp(code, resp)
+            return self.__send_resp(code, resp)
         elif self.path.endswith('/metahelper'):
             if lang is None:
                 return self.__send_resp(400, {'error': 'X-Language must be specified for metahelper functions'})
             epId, authToken = self.__get_epid_headers()
             code, resp = RDFHelper.get_meta_point(self.__qapiManager, epId, authToken, foc, lid, pid, lang)
-            self.__send_resp(code, resp)
+            return self.__send_resp(code, resp)
         #
         else:
             if pid is not None:
-                return self.__qapi_call(
+                return self._qapi_call(
                     self.__qapiManager.request_point_list_detailed,
                     foc,
                     lid,
                     pid)
             else:
-                return self.__qapi_call(
+                return self._qapi_call(
                     self.__qapiManager.request_point_list,
                     foc,
                     lid,
@@ -622,13 +624,13 @@ class Handler(BaseHTTPRequestHandler):
                     count = int(count)
                 except ValueError:
                     count = None
-            return self.__qapi_call(
+            return self._qapi_call(
                 self.__qapiManager.request_sub_recent,
                 sub_id,
                 count=count)
         else:
             lid = self.__path_arg(2)
-            return self.__qapi_call(
+            return self._qapi_call(
                 self.__qapiManager.request_sub_list,
                 lid,
                 limit=limit,
@@ -652,27 +654,27 @@ class Handler(BaseHTTPRequestHandler):
     def __do_PUT_entity(self, payload, lang):
         if self.path.endswith('/rename') and 'newlid' in payload:
             lid = self.__path_arg(2)
-            return self.__qapi_call(
+            return self._qapi_call(
                 self.__qapiManager.request_entity_rename,
                 lid,
                 payload['newlid'])
         elif self.path.endswith('/reassign') and 'epId' in payload:
             lid = self.__path_arg(2)
-            return self.__qapi_call(
+            return self._qapi_call(
                 self.__qapiManager.request_entity_reassign,
                 lid,
                 payload['epId'])
         elif self.path.endswith('/meta') and 'meta' in payload:
             lid = self.__path_arg(2)
             fmt = self.__path_arg(3)
-            return self.__qapi_call(
+            return self._qapi_call(
                 self.__qapiManager.request_entity_meta_set,
                 lid,
                 payload['meta'],
                 fmt)
         elif self.path.endswith('/setpublic') and 'public' in payload:
             lid = self.__path_arg(2)
-            return self.__qapi_call(
+            return self._qapi_call(
                 self.__qapiManager.request_entity_meta_setpublic,
                 lid,
                 payload['public'])
@@ -682,7 +684,7 @@ class Handler(BaseHTTPRequestHandler):
             epId, authToken = self.__get_epid_headers()
             lid = self.__path_arg(2)
             code, resp = RDFHelper.set_meta_entity(self.__qapiManager, epId, authToken, lid, payload, lang)
-            self.__send_resp(code, resp)
+            return self.__send_resp(code, resp)
         #
         else:
             return self.__send_resp(400, {'error': 'malformed'})
@@ -692,7 +694,7 @@ class Handler(BaseHTTPRequestHandler):
         lid = self.__path_arg(3)
         pid = self.__path_arg(4)
         if self.path.endswith('/rename'):
-            return self.__qapi_call(
+            return self._qapi_call(
                 self.__qapiManager.request_point_rename,
                 foc,
                 lid,
@@ -700,7 +702,7 @@ class Handler(BaseHTTPRequestHandler):
                 payload['newpid'] if 'newpid' in payload else '')
         elif self.path.endswith('/meta'):
             fmt = self.__path_arg(5)
-            return self.__qapi_call(
+            return self._qapi_call(
                 self.__qapiManager.request_point_meta_set,
                 foc,
                 lid,
@@ -712,7 +714,7 @@ class Handler(BaseHTTPRequestHandler):
                 return self.__send_resp(400, {'error': 'X-Language must be specified for metahelper functions'})
             epId, authToken = self.__get_epid_headers()
             code, resp = RDFHelper.set_meta_point(self.__qapiManager, epId, authToken, foc, lid, pid, payload, lang)
-            self.__send_resp(code, resp)
+            return self.__send_resp(code, resp)
         #
         else:
             return self.__send_resp(400, {'error': 'malformed'})
@@ -730,7 +732,7 @@ class Handler(BaseHTTPRequestHandler):
             lid = self.__path_arg(3)
             pid = self.__path_arg(4)
             label = self.__path_arg(5)
-            return self.__qapi_call(
+            return self._qapi_call(
                 self.__qapiManager.request_point_value_delete,
                 lid,
                 pid,
@@ -738,7 +740,7 @@ class Handler(BaseHTTPRequestHandler):
                 label)
         elif self.path.startswith('/sub'):
             subid = self.__path_arg(2)
-            return self.__qapi_call(
+            return self._qapi_call(
                 self.__qapiManager.request_sub_delete,
                 subid)
         else:
@@ -747,7 +749,7 @@ class Handler(BaseHTTPRequestHandler):
     def __do_DELETE_entity(self, payload):
         if self.path.endswith('/tag'):
             lid = self.__path_arg(2)
-            return self.__qapi_call(
+            return self._qapi_call(
                 self.__qapiManager.request_entity_tag_update,
                 lid,
                 payload['tags'] if 'tags' in payload else [],
@@ -760,11 +762,11 @@ class Handler(BaseHTTPRequestHandler):
                                                         authToken,
                                                         lid,
                                                         payload['tags'] if 'tags' in payload else [])
-            self.__send_resp(code, resp)
+            return self.__send_resp(code, resp)
         #
         else:
             lid = self.__path_arg(2)
-            return self.__qapi_call(
+            return self._qapi_call(
                 self.__qapiManager.request_entity_delete,
                 lid)
 
@@ -774,7 +776,7 @@ class Handler(BaseHTTPRequestHandler):
         pid = self.__path_arg(4)
         if self.path.endswith('/tag'):
             if payload is not None:
-                return self.__qapi_call(
+                return self._qapi_call(
                     self.__qapiManager.request_point_tag_update,
                     foc,
                     lid,
@@ -792,10 +794,10 @@ class Handler(BaseHTTPRequestHandler):
                                                        lid,
                                                        pid,
                                                        payload['tags'] if 'tags' in payload else [])
-            self.__send_resp(code, resp)
+            return self.__send_resp(code, resp)
         #
         else:
-            return self.__qapi_call(
+            return self._qapi_call(
                 self.__qapiManager.request_point_delete,
                 foc,
                 lid,
@@ -813,7 +815,7 @@ def getSSLContext(capath, crtpath, keypath, keypass=None):
     return ctx
 
 
-def setupServer(hostaddr, capath, crtpath, keypath, keypass, qapiManager, insecure_mode=False):
+def setupServer(hostaddr, capath, crtpath, keypath, keypass, qapiManager, insecure_mode=False, custom_handler=None):
     if not insecure_mode:
         Handler.setSSLContext(getSSLContext(capath, crtpath, keypath, keypass))
     else:
@@ -825,11 +827,19 @@ def setupServer(hostaddr, capath, crtpath, keypath, keypass, qapiManager, insecu
         logger.warning("*" * 50)
     Handler.setQapiManager(qapiManager)
     # server = ForkingHTTPServer(hostaddr, Handler)
-    server = ThreadingHTTPServer(hostaddr, Handler)
+    server = ThreadingHTTPServer(hostaddr, (Handler if custom_handler is None else _load_handler(custom_handler)))
     thread = Thread(target=server.serve_forever, kwargs={'poll_interval': 0.2})
     thread.start()
     logger.info('Started on %s:%s', server.server_name, server.server_port)
     return server, thread
+
+
+def _load_handler(name):
+    module, cls_name = name.rsplit('.', maxsplit=1)
+    cls = getattr(import_module(module), cls_name)
+    if not issubclass(cls, Handler):
+        raise TypeError('custom_handler not subclass of Handler')
+    return cls
 
 
 def stopServer(server, thread):

@@ -1,3 +1,6 @@
+v0.1.7
+- Add workerextra and minor fixes
+
 v0.1.6
 - Replace 'local' search/describe with new 'scope' argument (py-IoticAgent v0.6.0)
 

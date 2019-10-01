@@ -19,6 +19,8 @@ from threading import Thread, Event, Lock
 
 from IoticAgent import Core as IoticAgentCore
 
+from .import_helper import getItemFromModule
+
 from .QAPIWorker import QAPIWorker
 from .QAPIConfig import QAPIConfig
 QAPIMysql = None
@@ -48,6 +50,14 @@ class QAPIManager(object):
         else:
             raise ValueError("Config Mode must be 'ini' or 'mysql'")
         #
+        self.__workerExtra = None
+        if 'workerextra' in self.__config['qapimanager']:
+            try:
+                self.__workerExtra = getItemFromModule(self.__config['qapimanager']['workerextra'])
+            except:
+                logger.error('Failed to import WorkerExtra', exc_info=True)
+                raise
+        #
         self.__thread = None
         self.__stop = Event()
         #
@@ -61,105 +71,86 @@ class QAPIManager(object):
 
     def stop(self):
         self.__stop.set()
-        self.__thread.join()
+        if self.__thread is not None:
+            self.__thread.join()
         self.__thread = None
 
     def is_alive(self):
         return self.__thread is not None
+
+    def stop_wait(self, timeout):
+        self.__stop.wait(timeout)
 
     def __check_epid(self, epid, authtoken):
         """check_epid & accessToken helper
 
         Raises: ValueError for no ep / bad auth_token.
         """
-        if epid in self.__workers:
-            if self.__workers[epid].check_authtoken(authtoken):
-                return True
+        with self.__workers_lock:
+            if epid in self.__workers:
+                if self.__workers[epid].check_authtoken(authtoken):
+                    return self.__workers[epid]
         raise KeyError("no such epId")
 
     def default_lang(self, epid, authtoken):
-        with self.__workers_lock:
-            self.__check_epid(epid, authtoken)
-            return self.__workers[epid].default_lang
+        worker = self.__check_epid(epid, authtoken)
+        return worker.default_lang
 
     def get_feeddata(self, epid, authtoken):
-        with self.__workers_lock:
-            try:
-                self.__check_epid(epid, authtoken)
-            except:
-                return []
-            return self.__workers[epid].get_feeddata()
+        worker = self.__check_epid(epid, authtoken)
+        return worker.get_feeddata()
 
     def get_controlreq(self, epid, authtoken):
-        with self.__workers_lock:
-            try:
-                self.__check_epid(epid, authtoken)
-            except:
-                return []
-            return self.__workers[epid].get_controlreq()
+        worker = self.__check_epid(epid, authtoken)
+        return worker.get_controlreq()
 
     def get_unsolicited(self, epid, authtoken):
-        with self.__workers_lock:
-            try:
-                self.__check_epid(epid, authtoken)
-            except:
-                return []
-            return self.__workers[epid].get_unsolicited()
+        worker = self.__check_epid(epid, authtoken)
+        return worker.get_unsolicited()
 
     def request_entity_create(self, epid, authtoken, lid, tepid=None):
-        with self.__workers_lock:
-            self.__check_epid(epid, authtoken)
-            return self.__workers[epid].request_entity_create(lid, tepid=tepid)
+        worker = self.__check_epid(epid, authtoken)
+        return worker.request_entity_create(lid, tepid=tepid)
 
     def request_entity_rename(self, epid, authtoken, lid, newlid):
-        with self.__workers_lock:
-            self.__check_epid(epid, authtoken)
-            return self.__workers[epid].request_entity_rename(lid, newlid)
+        worker = self.__check_epid(epid, authtoken)
+        return worker.request_entity_rename(lid, newlid)
 
     def request_entity_reassign(self, epid, authtoken, lid, nepid=None):
-        with self.__workers_lock:
-            self.__check_epid(epid, authtoken)
-            return self.__workers[epid].request_entity_reassign(lid, nepid)
+        worker = self.__check_epid(epid, authtoken)
+        return worker.request_entity_reassign(lid, nepid)
 
     def request_entity_delete(self, epid, authtoken, lid):
-        with self.__workers_lock:
-            self.__check_epid(epid, authtoken)
-            return self.__workers[epid].request_entity_delete(lid)
+        worker = self.__check_epid(epid, authtoken)
+        return worker.request_entity_delete(lid)
 
     def request_entity_list(self, epid, authtoken, limit=500, offset=0):
-        with self.__workers_lock:
-            self.__check_epid(epid, authtoken)
-            return self.__workers[epid].request_entity_list(limit=limit, offset=offset)
+        worker = self.__check_epid(epid, authtoken)
+        return worker.request_entity_list(limit=limit, offset=offset)
 
     def request_entity_list_all(self, epid, authtoken, limit=500, offset=0):
-        with self.__workers_lock:
-            self.__check_epid(epid, authtoken)
-            return self.__workers[epid].request_entity_list_all(limit=limit, offset=offset)
+        worker = self.__check_epid(epid, authtoken)
+        return worker.request_entity_list_all(limit=limit, offset=offset)
 
     def request_entity_meta_get(self, epid, authtoken, lid, fmt="n3"):
-        with self.__workers_lock:
-            self.__check_epid(epid, authtoken)
-            return self.__workers[epid].request_entity_meta_get(lid, fmt=fmt)
+        worker = self.__check_epid(epid, authtoken)
+        return worker.request_entity_meta_get(lid, fmt=fmt)
 
     def request_entity_meta_set(self, epid, authtoken, lid, meta, fmt="n3"):
-        with self.__workers_lock:
-            self.__check_epid(epid, authtoken)
-            return self.__workers[epid].request_entity_meta_set(lid, meta, fmt=fmt)
+        worker = self.__check_epid(epid, authtoken)
+        return worker.request_entity_meta_set(lid, meta, fmt=fmt)
 
     def request_entity_meta_setpublic(self, epid, authtoken, lid, public=True):
-        with self.__workers_lock:
-            self.__check_epid(epid, authtoken)
-            return self.__workers[epid].request_entity_meta_setpublic(lid, public=public)
+        worker = self.__check_epid(epid, authtoken)
+        return worker.request_entity_meta_setpublic(lid, public=public)
 
     def request_entity_tag_update(self, epid, authtoken, lid, tags, delete=False):
-        with self.__workers_lock:
-            self.__check_epid(epid, authtoken)
-            return self.__workers[epid].request_entity_tag_update(lid, tags, delete=delete)
+        worker = self.__check_epid(epid, authtoken)
+        return worker.request_entity_tag_update(lid, tags, delete=delete)
 
     def request_entity_tag_list(self, epid, authtoken, lid, limit=100, offset=0):
-        with self.__workers_lock:
-            self.__check_epid(epid, authtoken)
-            return self.__workers[epid].request_entity_tag_list(lid, limit=limit, offset=offset)
+        worker = self.__check_epid(epid, authtoken)
+        return worker.request_entity_tag_list(lid, limit=limit, offset=offset)
 
     def __dummy_cb(self, *args, **kwargs):
         pass
@@ -168,131 +159,114 @@ class QAPIManager(object):
         cb = None
         if foc == IoticAgentCore.Const.R_CONTROL:
             cb = self.__dummy_cb
-        with self.__workers_lock:
-            self.__check_epid(epid, authtoken)
-            return self.__workers[epid].request_point_create(foc, lid, pid, control_cb=cb, save_recent=save_recent)
+        worker = self.__check_epid(epid, authtoken)
+        return worker.request_point_create(foc, lid, pid, control_cb=cb, save_recent=save_recent)
 
     def request_point_rename(self, epid, authtoken, foc, lid, pid, newpid):
-        with self.__workers_lock:
-            self.__check_epid(epid, authtoken)
-            return self.__workers[epid].request_point_rename(foc, lid, pid, newpid)
+        worker = self.__check_epid(epid, authtoken)
+        return worker.request_point_rename(foc, lid, pid, newpid)
 
     def request_point_delete(self, epid, authtoken, foc, lid, pid):
-        with self.__workers_lock:
-            self.__check_epid(epid, authtoken)
-            return self.__workers[epid].request_point_delete(foc, lid, pid)
+        worker = self.__check_epid(epid, authtoken)
+        return worker.request_point_delete(foc, lid, pid)
 
     def request_point_list(self, epid, authtoken, foc, lid, limit=500, offset=0):
-        with self.__workers_lock:
-            self.__check_epid(epid, authtoken)
-            return self.__workers[epid].request_point_list(foc, lid, limit=limit, offset=offset)
+        worker = self.__check_epid(epid, authtoken)
+        return worker.request_point_list(foc, lid, limit=limit, offset=offset)
 
     def request_point_list_detailed(self, epid, authtoken, foc, lid, pid):
-        with self.__workers_lock:
-            self.__check_epid(epid, authtoken)
-            return self.__workers[epid].request_point_list_detailed(foc, lid, pid)
+        worker = self.__check_epid(epid, authtoken)
+        return worker.request_point_list_detailed(foc, lid, pid)
 
     def request_point_meta_get(self, epid, authtoken, foc, lid, pid, fmt="n3"):
-        with self.__workers_lock:
-            self.__check_epid(epid, authtoken)
-            return self.__workers[epid].request_point_meta_get(foc, lid, pid, fmt=fmt)
+        worker = self.__check_epid(epid, authtoken)
+        return worker.request_point_meta_get(foc, lid, pid, fmt=fmt)
 
     def request_point_meta_set(self, epid, authtoken, foc, lid, pid, meta, fmt="n3"):
-        with self.__workers_lock:
-            self.__check_epid(epid, authtoken)
-            return self.__workers[epid].request_point_meta_set(foc, lid, pid, meta, fmt=fmt)
+        worker = self.__check_epid(epid, authtoken)
+        return worker.request_point_meta_set(foc, lid, pid, meta, fmt=fmt)
 
     def request_point_value_create(self, epid, authtoken, lid, pid, foc, label, vtype,
                                    lang=None, comment=None, unit=None):
-        with self.__workers_lock:
-            self.__check_epid(epid, authtoken)
-            return self.__workers[epid].request_point_value_create(lid, pid, foc, label,
-                                                                   vtype, lang=lang, comment=comment, unit=unit)
+        worker = self.__check_epid(epid, authtoken)
+        return worker.request_point_value_create(lid, pid, foc, label,
+                                                 vtype, lang=lang, comment=comment, unit=unit)
 
     def request_point_value_delete(self, epid, authtoken, lid, pid, foc, label=None):
-        with self.__workers_lock:
-            self.__check_epid(epid, authtoken)
-            return self.__workers[epid].request_point_value_delete(lid, pid, foc, label=label)
+        worker = self.__check_epid(epid, authtoken)
+        return worker.request_point_value_delete(lid, pid, foc, label=label)
 
     def request_point_value_list(self, epid, authtoken, lid, pid, foc, limit=500, offset=0):
-        with self.__workers_lock:
-            self.__check_epid(epid, authtoken)
-            return self.__workers[epid].request_point_value_list(lid, pid, foc, limit=limit, offset=offset)
+        worker = self.__check_epid(epid, authtoken)
+        return worker.request_point_value_list(lid, pid, foc, limit=limit, offset=offset)
 
     def request_point_tag_update(self, epid, authtoken, foc, lid, pid, tags, delete=False):
-        with self.__workers_lock:
-            self.__check_epid(epid, authtoken)
-            return self.__workers[epid].request_point_tag_update(foc, lid, pid, tags, delete=delete)
+        worker = self.__check_epid(epid, authtoken)
+        return worker.request_point_tag_update(foc, lid, pid, tags, delete=delete)
 
     def request_point_tag_list(self, epid, authtoken, foc, lid, pid, limit=500, offset=0):
-        with self.__workers_lock:
-            self.__check_epid(epid, authtoken)
-            return self.__workers[epid].request_point_tag_list(foc, lid, pid, limit=limit, offset=offset)
+        worker = self.__check_epid(epid, authtoken)
+        return worker.request_point_tag_list(foc, lid, pid, limit=limit, offset=offset)
 
     def request_sub_create(self, epid, authtoken, lid, foc, gpid):
         cb = None
         if foc == IoticAgentCore.Const.R_FEED:
             cb = self.__dummy_cb
-        with self.__workers_lock:
-            self.__check_epid(epid, authtoken)
-            return self.__workers[epid].request_sub_create(lid, foc, gpid, callback=cb)
+        worker = self.__check_epid(epid, authtoken)
+        return worker.request_sub_create(lid, foc, gpid, callback=cb)
 
     def request_sub_create_local(self, epid, authtoken, slid, foc, lid, pid):
         cb = None
         if foc == IoticAgentCore.Const.R_FEED:
             cb = self.__dummy_cb
-        with self.__workers_lock:
-            self.__check_epid(epid, authtoken)
-            return self.__workers[epid].request_sub_create_local(slid, foc, lid, pid, callback=cb)
+        worker = self.__check_epid(epid, authtoken)
+        return worker.request_sub_create_local(slid, foc, lid, pid, callback=cb)
 
     def request_point_share(self, epid, authtoken, lid, pid, data, mime=None):
-        with self.__workers_lock:
-            self.__check_epid(epid, authtoken)
-            return self.__workers[epid].request_point_share(lid, pid, data, mime=mime)
+        worker = self.__check_epid(epid, authtoken)
+        return worker.request_point_share(lid, pid, data, mime=mime)
 
     def request_sub_ask(self, epid, authtoken, sub_id, data, mime=None):
-        with self.__workers_lock:
-            self.__check_epid(epid, authtoken)
-            return self.__workers[epid].request_sub_ask(sub_id, data, mime=mime)
+        worker = self.__check_epid(epid, authtoken)
+        return worker.request_sub_ask(sub_id, data, mime=mime)
 
     def request_sub_tell(self, epid, authtoken, sub_id, data, timeout, mime=None):
-        with self.__workers_lock:
-            self.__check_epid(epid, authtoken)
-            return self.__workers[epid].request_sub_tell(sub_id, data, timeout, mime=mime)
+        worker = self.__check_epid(epid, authtoken)
+        return worker.request_sub_tell(sub_id, data, timeout, mime=mime)
 
     def request_sub_delete(self, epid, authtoken, sub_id):
-        with self.__workers_lock:
-            self.__check_epid(epid, authtoken)
-            return self.__workers[epid].request_sub_delete(sub_id)
+        worker = self.__check_epid(epid, authtoken)
+        return worker.request_sub_delete(sub_id)
 
     def request_sub_list(self, epid, authtoken, lid, limit=500, offset=0):
-        with self.__workers_lock:
-            self.__check_epid(epid, authtoken)
-            return self.__workers[epid].request_sub_list(lid, limit=limit, offset=offset)
+        worker = self.__check_epid(epid, authtoken)
+        return worker.request_sub_list(lid, limit=limit, offset=offset)
 
     def request_sub_recent(self, epid, authtoken, sub_id, count=None):
-        with self.__workers_lock:
-            self.__check_epid(epid, authtoken)
-            return self.__workers[epid].request_sub_recent(sub_id, count=count)
+        worker = self.__check_epid(epid, authtoken)
+        return worker.request_sub_recent(sub_id, count=count)
 
     def request_search(self, epid, authtoken, text=None, lang=None, location=None, unit=None,
                        limit=100, offset=0, type_='full', scope=IoticAgentCore.Const.SearchScope.PUBLIC):
-        with self.__workers_lock:
-            self.__check_epid(epid, authtoken)
-            return self.__workers[epid].request_search(text=text, lang=lang, location=location,
-                                                       unit=unit, limit=limit, offset=offset, type_=type_, scope=scope)
+        worker = self.__check_epid(epid, authtoken)
+        return worker.request_search(text=text, lang=lang, location=location,
+                                     unit=unit, limit=limit, offset=offset, type_=type_, scope=scope)
 
     def request_describe(self, epid, authtoken, guid, scope=IoticAgentCore.Const.DescribeScope.AUTO):
-        with self.__workers_lock:
-            self.__check_epid(epid, authtoken)
-            return self.__workers[epid].request_describe(guid, scope=scope)
+        worker = self.__check_epid(epid, authtoken)
+        return worker.request_describe(guid, scope=scope)
 
     def __run(self):
-        #
+        with self.__workers_lock:
+            if self.__config['config']['mode'] == 'mysql':
+                self.__config_reader.prune()
         # Main loop starting/stopping QAPIWorker(s)
         logger.info("Started")
         while not self.__stop.is_set():
             agents = self.__config_reader.config_list()
+            if agents is None:
+                self.__stop.wait(2)
+                continue
             with self.__workers_lock:
                 if self.__config['config']['mode'] == 'mysql':
                     # Remove Agents that have been removed from the config
@@ -314,7 +288,8 @@ class QAPIManager(object):
                     except KeyError:
                         logger.error("Cannot find agent name: '%s' Skipping!", name)
                         continue
-                    epid = details['epid']
+                    if details is None:
+                        continue
                     #
                     if 'vhost' in self.__config['qapimanager']:
                         details['vhost'] = self.__config['qapimanager']['vhost']
@@ -327,6 +302,7 @@ class QAPIManager(object):
                     if 'throttle' in self.__config['qapimanager']:
                         details['throttle'] = self.__config['qapimanager']['throttle']
                     #
+                    epid = details['epid']
                     if epid in self.__workers:
                         if not self.__workers[epid].check_details(details):
                             logger.info("Worker %s bad details.  Killing!", epid)
@@ -340,7 +316,8 @@ class QAPIManager(object):
                             self.__stop,
                             keepFeeddata=self.__config['qapimanager']['keep_feeddata'],
                             keepControlreq=self.__config['qapimanager']['keep_controlreq'],
-                            keepUnsolicited=self.__config['qapimanager']['keep_unsolicited']
+                            keepUnsolicited=self.__config['qapimanager']['keep_unsolicited'],
+                            workerExtra=self.__workerExtra
                         )
                         self.__workers[epid].start()
             #

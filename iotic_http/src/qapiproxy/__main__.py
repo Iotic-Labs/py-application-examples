@@ -17,16 +17,15 @@
 
 # pylint: disable=invalid-name
 
-from sys import argv
+from sys import argv, exc_info
 from os import environ
 import logging
+from traceback import format_exception
 
 from .QAPIManager import QAPIManager
 from .QAPIConfig import QAPIConfig
 from . import RESTServer
 
-logging.basicConfig(format='%(asctime)s,%(msecs)03d %(levelname)s [%(name)s] {%(threadName)s} %(message)s',
-                    level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 qapimanager = server = thread = None
@@ -37,6 +36,35 @@ def stop():
     logger.info("Stopping...")
     RESTServer.stopServer(server, thread)
     qapimanager.stop()
+
+
+def configure_logging(config):
+    try:
+        # Internal logging configuration, not applicable to public releases
+        from ioticlabs.common.logutil import load_yaml_config, apply_basic_config
+    except ImportError:
+        logging.basicConfig(format='%(asctime)s %(levelname)s [%(name)s] {%(threadName)s} %(message)s',
+                            level=logging.DEBUG)
+        return
+
+    try:
+        cfg_file = config['config']['log_cfg']
+    except KeyError:
+        cfg_file = None
+
+    cfg_exc = None
+    if cfg_file:
+        try:
+            load_yaml_config(cfg_file)
+        except:  # pylint: disable=bare-except
+            cfg_exc = exc_info()
+            apply_basic_config()
+    else:
+        apply_basic_config()
+        logger.warning('No logging configuration specified')
+
+    if cfg_exc:
+        logger.warning('Failed to load configuration: %s\n%s', cfg_exc[1], ''.join(format_exception(*cfg_exc)))
 
 
 def main():
@@ -53,9 +81,13 @@ def main():
         exit(1)
     # todo except blah
 
-    # TODO: config validation etc
+    configure_logging(config)
 
-    qapimanager = QAPIManager(config)
+    try:
+        qapimanager = QAPIManager(config)
+    except:
+        logger.critical("Exception loading QAPIManager. Quitting.", exc_info=True)
+        return 1
     qapimanager.start()
 
     insecure_mode = False
@@ -63,19 +95,23 @@ def main():
         if bool(config['https']['insecure_mode']) is True:
             insecure_mode = True
 
-    server, thread = RESTServer.setupServer(
-        (config['https']['host'], int(config['https']['port'])),
-        config['https']['ssl_ca'],
-        config['https']['ssl_crt'],
-        config['https']['ssl_key'],
-        config['https']['ssl_pass'],
-        qapimanager,
-        insecure_mode
-    )
+    try:
+        server, thread = RESTServer.setupServer(
+            (config['https']['host'], int(config['https']['port'])),
+            config['https'].get('ssl_ca'),
+            config['https'].get('ssl_crt'),
+            config['https'].get('ssl_key'),
+            config['https'].get('ssl_pass'),
+            qapimanager,
+            insecure_mode,
+            config['https'].get('rest_handler')
+        )
+    except:
+        qapimanager.stop()
+        raise
 
     if 'IOTIC_BACKGROUND' in environ:
         from signal import signal, SIGINT, SIGTERM
-        from time import sleep
 
         logger.info("Started in non-interactive mode.")
 
@@ -87,7 +123,7 @@ def main():
         signal(SIGTERM, exit_handler)
 
         while qapimanager.is_alive():
-            sleep(5)
+            qapimanager.stop_wait(5)
     else:
         try:
             while True:

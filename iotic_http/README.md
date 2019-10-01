@@ -134,3 +134,11 @@ For system service:
 - chkconfig --add qapiproxy
 - chkconfig qapiproxy off  # Don't start automatically since depends on everything running already
 - sudo service qapiproxy start
+
+
+## WorkerExtra.py
+
+Iotic Labs uses QAPI Proxy in our infrastructure.  For some deployments, it was desirable for the proxy to have some more intelligence about Things, Feeds & Controls.  We have added a simple class which gets instantiated with a [IoticAgent.Core.Client](https://iotic-labs.github.io/py-IoticAgent/Core/Client.m.html) instance.  Before the QAPIWorker begins its main loop it calls WorkerExtra.start, and when the loop is finished it calls WorkerExtra.stop.  In this way we are able to automatically confirm Control tell requests or notify clients about incoming Feed data.
+
+The sample class can be found [here](https://github.com/Iotic-Labs/IoticHttp/tree/master/src/qapiproxy/WorkerExtra.sample.py).  To use, simply copy WorkerExtra.samply.py to WorkerExtra.py.
+
