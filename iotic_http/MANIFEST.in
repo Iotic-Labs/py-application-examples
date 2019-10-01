@@ -1,0 +1,3 @@
+include README.md CHANGELOG example.ini qaconfig.sql qapiproxy.init
+include ez_setup.py
+global-include *NOTICE *AUTHORS *LICENSE

@@ -1,0 +1,215 @@
+#!/usr/bin/env bash
+# Copyright (c) 2015 Iotic Labs Ltd. All rights reserved.
+
+### BEGIN INIT INFO
+# Provides:          qapiproxy
+# Required-Start:    $local_fs $network $syslog
+# Should-Start:      $time
+# Required-Stop:     $local_fs $network $syslog
+# Should-Stop:       $time
+# Default-Start:     3 4 5
+# Default-Stop:      0 1 2 6
+# Short-Description: QAPI to HTTP(S) proxy daemon
+# Description: Provides a HTTP(S) interface to the IoticLabs QAPI
+### END INIT INFO
+
+# ------------------------------------------------------------------------------
+# Configuration (Note: Paths used here should be absolute)
+# ------------------------------------------------------------------------------
+
+# Python executable (must be absolute path to executable, not script)
+PYTHON_BIN="$(which python3 2>/dev/null)"
+# Arguments for Python interpreter
+# Note: -S missing system paths allowed
+PYTHON_ARGS=(-bs -W all)
+# Working directory (relative paths in configuration are based on this)
+QAPIPROXY_RUN_DIR=.
+# User to run the service as
+#QAPIPROXY_USER=qapiproxy
+
+_NAME=${0##*/}
+
+# ------------------------------------------------------------------------------
+
+# Source LSB library functions
+lsb_src=/lib/lsb/init-functions
+if [ ! -r "$lsb_src" ]; then
+    echo "${_NAME}: cannot read ${lsb_src}: script cannot run" 1>&2
+    exit 1
+fi
+. "$lsb_src"
+
+# Try to load configuration from OS-specific locations
+if [ -f /etc/sysconfig/qapiproxy ]; then
+    . /etc/sysconfig/qapiproxy
+elif [ -f /etc/default/qapiproxy ]; then
+    . /etc/default/qapiproxy
+fi
+
+# Check required parameters
+if [[ ! -x "$PYTHON_BIN" ]]; then
+    log_failure_msg "PYTHON_BIN (${PYTHON_BIN}) not executable"
+  exit 1
+fi
+if [ ! -d "$QAPIPROXY_RUN_DIR" ]; then
+    log_failure_msg "QAPIPROXY_RUN_DIR (${QAPIPROXY_RUN_DIR}) not accessible"
+  exit 1
+fi
+# Ensure root
+if [ "$QAPIPROXY_USER" != "" ] && [ "$(id -u)" != "0" ]; then
+    echo "${_NAME}: Script must be run as root (when QAPIPROXY_USER set)" 1>&2
+    exit 1
+fi
+
+# Location of executable bundle
+if [ "$QAPIPROXY_BINARY" == "" ]; then
+    QAPIPROXY_BINARY=${QAPIPROXY_RUN_DIR}/qapiproxy.pyz
+fi
+# PID location for LSB scripts to detect status
+if [ "$QAPIPROXY_PID_FILE" == "" ]; then
+    QAPIPROXY_PID_FILE=${QAPIPROXY_RUN_DIR}/data/qapiproxy.pid
+fi
+# Configuration to use
+if [ "$QAPIPROXY_CFG_FILE" == "" ]; then
+    QAPIPROXY_CFG_FILE=${QAPIPROXY_RUN_DIR}/qapiproxy.cfg
+fi
+# Log file
+if [ "$QAPIPROXY_LOG_FILE" == "" ]; then
+    QAPIPROXY_LOG_FILE=${QAPIPROXY_RUN_DIR}/data/qapiproxy.log
+fi
+
+# ------------------------------------------------------------------------------
+
+qapiproxy_start () {
+    log_success_msg "Starting ${_NAME}"
+
+    # Check whether already running
+    if pidofproc -p "${QAPIPROXY_PID_FILE}" "$PYTHON_BIN" &> /dev/null; then
+        log_success_msg "${_NAME} started"
+        result=0
+        return
+    fi
+
+    if ! cd "$QAPIPROXY_RUN_DIR" &> /dev/null; then
+        log_failure_msg "Failed to cd to $QAPIPROXY_RUN_DIR"
+        result=4
+        return
+    fi
+
+    CMD=("${PYTHON_BIN}" "${PYTHON_ARGS[@]}" -mqapiproxy "${QAPIPROXY_CFG_FILE}")
+    (
+        if [ "$QAPIPROXY_USER" != "" ]; then
+            touch "$QAPIPROXY_PID_FILE"
+            chown "$QAPIPROXY_USER" "$QAPIPROXY_PID_FILE"
+            # Have to resolve to absolute path since su usage resets env
+            QAPIPROXY_RUN_DIR=$(pwd)
+            su - "$QAPIPROXY_USER" -c "
+            cd '$QAPIPROXY_RUN_DIR' &> /dev/null
+            export PYTHONPATH='${QAPIPROXY_BINARY}'
+            export IOTIC_BACKGROUND=1
+            exec ${CMD[*]} &>> '$QAPIPROXY_LOG_FILE' &
+            disown \"\$!\"
+            echo \"\$!\" > '$QAPIPROXY_PID_FILE'"
+        else
+            export PYTHONPATH="${QAPIPROXY_BINARY}"
+            # daemonize
+            export IOTIC_BACKGROUND=1
+            exec "${CMD[@]}" &>> "$QAPIPROXY_LOG_FILE" &
+            disown "$!"
+            echo "$!" > "$QAPIPROXY_PID_FILE"
+        fi
+    )
+    pidofproc -p "${QAPIPROXY_PID_FILE}" "$PYTHON_BIN" &> /dev/null
+    if [ "$?" == "0" ]; then
+        log_success_msg "${_NAME} started"
+        result=0
+    else
+        log_failure_msg "${_NAME} failed to start"
+        result=7
+    fi
+}
+
+# ------------------------------------------------------------------------------
+
+qapiproxy_status () {
+    pidofproc -p "${QAPIPROXY_PID_FILE}" "$PYTHON_BIN" &> /dev/null
+    result=$?
+
+    if [ "$result" == "0" ]; then
+        log_success_msg "${_NAME} is running ($(head -n1 ${QAPIPROXY_PID_FILE}))"
+    else
+        log_warning_msg "${_NAME} is not running"
+    fi
+}
+
+# ------------------------------------------------------------------------------
+
+qapiproxy_stop () {
+    log_success_msg "Stopping ${_NAME}"
+
+    killproc -p "${QAPIPROXY_PID_FILE}" "$PYTHON_BIN" -SIGTERM &> /dev/null
+    result=$?
+
+    case "$result" in
+        0)
+            # When specifying a signal, killproc exist immediately so have to
+            # wait manually to verify it has stopped
+            for _ in $(seq 10); do
+                pidofproc -p "${QAPIPROXY_PID_FILE}" "$PYTHON_BIN" &> /dev/null
+                if [ "$?" != "0" ]; then
+                    stopped=1
+                    break
+                fi
+                sleep .5
+            done
+            if [ "$stopped" ]; then
+                rm -f "${QAPIPROXY_PID_FILE}"
+                if [ "$?" != "0" ]; then
+                    log_warning_msg "Failed to remove ${QAPIPROXY_PID_FILE}"
+                fi
+                log_success_msg "${_NAME} stopped"
+            else
+                log_failure_msg "${_NAME} failed to stop (within 15s)"
+                result=1
+            fi
+            ;;
+        7)
+            log_warning_msg "${_NAME} is not running"
+            # remove PID in case left over from previous run (or crash)
+            rm -f "${QAPIPROXY_PID_FILE}"
+            if [ "$?" != "0" ]; then
+                log_warning_msg "Failed to remove ${QAPIPROXY_PID_FILE}"
+            fi
+            ;;
+        *)
+            log_failure_msg "${_NAME} failed to stop"
+    esac
+}
+
+# ------------------------------------------------------------------------------
+
+case "$1" in
+    start)
+        qapiproxy_start
+        exit $result
+        ;;
+    stop)
+        qapiproxy_stop
+        exit $result
+        ;;
+    restart)
+        qapiproxy_stop
+        # 0 = stopped, 7 = not running
+        if [ "$result" == "0" ] || [ "$result" == "7" ]; then
+            qapiproxy_start
+        fi
+        exit $result
+        ;;
+    status)
+        qapiproxy_status
+        exit $result
+        ;;
+    *)
+        echo "Usage: ${_NAME} {start|stop|restart|status}"
+        exit 2
+esac

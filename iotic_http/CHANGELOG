@@ -1,0 +1,11 @@
+v0.1.6
+- Replace 'local' search/describe with new 'scope' argument (py-IoticAgent v0.6.0)
+
+v0.1.5
+- Add recent config option and touch docs
+
+v0.1.3
+- Updates to reflect agent v0.4.1
+
+v0.0.1 Pre-public release
+Pre-release to members of the FWIC 16 Innovation showcase.
