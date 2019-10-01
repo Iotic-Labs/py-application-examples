@@ -1,0 +1,230 @@
+---- REQUEST FROM LHT
+* need followall
+* need controlall
+* need throttle feeds
+* need throttle controls
+
+---- QUERIES FROM DJW
+
+THOUGHTS ABOUT AUTOMATED FEED HANDLING BEHAVIOUR
+
+follow-all behaviour (and associated iot.share() and handlers).
+iotic labs will define behaviour. Then I will spec an API,
+get it approved, then write the implementation and test it in
+the local space. The local space is an executable specification.
+
+NOTE: There are two sides to this - the left hand side of a feed follow
+instigated in the webui, and the right hand side of a feed follow
+instigated in the web ui. The left hand side could be routed to
+the default Feed. The right hand side has nowhere to go.
+
+FEED LEFT HAND SIDE needs a feed that can generate data, that the follower
+will bind to. This could be the default Feed. The script needs to
+somehow share data on this, and squash it if there are no followers.
+FOR THROTTLE: this could only be done by setting the default
+when_new_follower handler to call a function that checked a
+throttle limit, and if the throttle is exceeded it unfollows
+one of the existing followers. Not clear if you would want
+a throttle at the feed producing end or not. This seems
+bonkers, so why would you need a throttle at this end?
+
+I think this is a flawed design, because if you had 1 million followers,
+you would not want to store the list in memory locally.
+
+Not clear how you would turn the throttle on and off.
+
+Would this always be the default Feed on a thing? What
+if the webui action was performed on another Feed
+on a Thing that has more than one Feed, how would the
+behaviour be enabled remotely?
+
+
+FEED RIGHT HAND SIDE needs an UnboundPoint that can be turned into a
+BoundPoint when a new subscription is made for the Thing. This
+could be a (new) Point(UnboundPoint) catchall, that is routed
+to when a new subscription notification comes in from IoticAgent.
+There will need to be handlers for this, presumably tagged
+against a name of a point (tagging against iot might be really
+confusing with the default actual feed). What handlers
+will be required for both meta interactions and data interactions?
+
+Doesn't seem possible for a feed follower to follow more than
+one feed at a time? Is it? If it is, then a throttle could
+be provided here. The throttle could keep a list of
+subscriptions and when the limit is reached, choose some way
+of unfollowing one of the other ones. Would need an algorithm
+to select which one to boot off. Doesn't seem in keeping
+with Iotic Space Feeds being 1:many (this would imply
+many:many which seems bonkers). So why would you need
+a throttle at this end?
+
+Not clear how you would turn the throttle on and off.
+Not clear how you would enable and disable this feed follower
+functionality on a Thing.
+
+
+Thing - if a new Feed is created in the webui, what should
+the agent/script do with this new feed - what default behaviour should
+it wire up to, or should it just call the when_new_feed
+for the thing and let it decide? Same for deleting a Feed
+in the webui. How will the script know what data to share to the
+feed without changing the script?
+
+
+THOUGHTS ABOUT AUTOMATED CONTROL HANDLING BEHAVIOUR
+
+control-all behaviour (and associated iot.ask()/tell and handlers)
+iotic labs will define behaviour. Then I will spec an API,
+get it approved, then write the implementation and test it in
+the local space. The local space is an executable specification.
+
+NOTE: There are two sides to this - the left hand side of a control
+attach instigated in the webui, and the right hand side of a control
+attach instigated in the webui. The right hand side could go to
+the default control. The left hand side has nowhere to come from.
+
+CONTROL RIGHT HAND SIDE needs a control that can be actuated, that the
+attacher can attach to. This can just be the default control.
+
+This could be throttled, if it has a list of subscribers, when a new
+subscriber comes in if the throttle is reached, it could apply
+some unspecified algorithm to choose an existing attacher and
+detach it. 
+
+Not clear how you would specify the throttle.
+Not clear how you would enable and disable this feature,
+especially if it is on the default control - or is it on
+some other control, and if so, how would that be specified.
+
+What if there was more than one real control on a thing,
+does only one of them have this automated behaviour, or can
+you do it on any real control? How would you turn this
+behaviour on and off?
+
+
+CONTROL LEFT HAND SIDE needs an extra UnboundPoint that can accept any
+IoticAgent new subscription notifications for the Thing.
+If there is more than one subscription, a list needs to be built
+and inner points created, and a local fanout performed so that
+when you ask/tell on this Point, it fansout to all items in the
+list. tell() is hard because it would imply that all have to
+confirm before it returns, and any one error what does that
+mean if others have confirmed? Might disallow tell in this
+case. This local automated fanout looks like new functionality
+to me, I don't recognise it. If it is not what is wanted,
+then what actually is a throttle, as you can only have one
+so there is nothing to throttle?
+
+Thing - if a new Control is created in the webui, what should
+the agent/script do with this new control - what default behaviour should
+it wire up to, or should it just call the when_new_control
+for the thing and let it decide? Same for deleting a Control
+in the webui. What will this new webui created control wire
+up to in the app script so that it can use the incoming data
+to do something useful? You could create any number of real controls
+in the webui, if you created 10, the best they could do is to wire
+up to a single default handler, but why would you have 10 real
+controls doing the same thing? It would make much more sense
+having one control doing one thing that is attached to by
+multiple left hand side attachments.
+
+---- REPLIES FROM MW/LHT
+
+Mark and I have just gone through your questions and template.py . 
+I hope the notes below answer all your questions, and give you what you need:
+
+
+Refering to your template.
+There's nothing much to change, apart from doesn't show the use of 
+
+iot.set_mode(iot.IMMEDIATE)
+my_feed.set_mode(iot.IMMEDIATE)
+but that you said was in the new template
+
+How do you set the rate if it's TIMED?
+my_feed.set_mode(iot.TIMED, rate=2)  ??like this??
+
+and...
+
+The ability to name default thing/feed/control in configuration.ini
+
+
+DEFER the below
+===============
+
+DEFER Toggle single Feed throttle on/off (affects basic demo interoperability, will sometimes prevent)
+DEFER Toggle single Control throttle on/off (affects basic demo interoperability, will sometimes prevent)
+DEFER Toggle single Value throttle on/off (DANGER affects basic demo interoperability, will sometimes prevent. Limits use for building physical demos - will only be interoperable with known Things at data level. Cannot interact with non-owned Things in the same way as owned. Does not represent Iotic best-practice. No workaround in UI.)
+DEFER Set minimal metadata for Thing, Feed, Control (can set in UI for now)
+DEFER Set Values metadata (DANGER affects basic demo interoperability, will sometimes prevent. Limits use for building physical demos - will only be interoperable with known Things at data level. Cannot interact with non-owned Things in the same way as owned. Does not represent Iotic best-practice. No workaround in UI.)
+DEFER Get metadata from remote Thing, Feed, Control (limits development)
+DEFER Get Values metadata (DANGER affects basic demo interoperability, will sometimes prevent. Limits use for building physical demos - will only be interoperable with known Things at data level. Cannot interact with non-owned Things in the same way as owned. Does not represent Iotic best-practice. No workaround in UI.)
+DEFER Tag (not listed as PRI-A)
+DEFER Public/unlisted as no metadata yet
+DEFER run in foreground/background (DANGER may limit ability to quick-create physical demos) 
+
+
+Clarification on following and asking all
+=========================================
+
+Unbound points
+==============
+We now understand your "Unbound point" idea (we think)
+
+Feeds
+-----
+For remote feed follows and/or remote control attaches should belong to the default 
+thing unless specified otherwise
+e.g. 
+feed_follow = iot.find("mw", "mw_feed").follow() # so where do you draw the line to in the UI?
+
+Need to know which *thing* the feed-following callback refers to - so where do you 
+draw the line to in the UI
+e.g. @iot.feed_follower.when_updated for *default* thing 
+or   @thing.feed_follower.when_updated for default thing
+and  @my_thing.feed_follower.when_updated for extra things
+
+Controls
+--------
+Control attach list as per Mark's code - but with the same unbound nature as above
+with this example you have to start your line at "my_thing" - what happens to the 
+default thing?
+
+my_attached = []
+
+@mw_thing.when_have_attached #uses mw_thing
+def attached(other_thing):
+    print(other_thing)
+    my_attached.append(other_thing)
+    
+def control_all():
+    my_control_data = random.randint(0,10) 
+    for control in my_attached:
+        control.ask(my_control_data)
+       
+       
+In the iot (default) case
+something like the below?? - use your discretion
+
+@iot.when_have_attached
+def attached(other_thing):
+    print(other_thing)
+    #  automatically updates the internal list
+    
+# then just call an ask_all function?
+iot.ask_all()
+# or assign to an external action e.g. event (e.g. for sense hat)
+sense.stick.direction_down = iot.ask_all
+
+What about the contents in the control to send to the others?
+iot.ask_all.value = random.randint(0,10)
+- or -
+iot.ask_all(random.randint(0,10))
+- or - 
+@iot.ask_all
+def get_data():
+    data = random.randint(0,10)
+    return data
+- or -
+iot.ask_all(get_data)
+

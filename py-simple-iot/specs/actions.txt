@@ -1,0 +1,56 @@
+# actions.txt  09/11/2016  D.J.Whale
+#
+# The main point about these actions, is they are not Iotic,
+# but they all need to be easily slotted into any of the action points in
+# iotic callbacks, or any action points in iotic data generating code.
+
+# Note: This is not a definitive list of canned actions
+
+# Could write all action handlers to a particular interface
+# format, and then you could just pass them as a parameter to a feed or control instance
+# and it pre-knits handler code that makes it all happen.
+
+# CANNED ACTIONS
+#B   toggle
+#B   display on console
+#B   display on GUI
+#B   display on LCD
+#B   display on sensehat
+#B   restrict control
+#B   unrestrict control
+#B   count
+#B   sum
+#B   trend
+#B   rate
+#B   aggregate
+#B   average
+#B   reset
+#B   led
+#B   buzzer
+#B   visualise (how?)
+#B   store in file
+#B   store in database
+#B   scaled graph
+#B   display single value
+#B   display metadata for single value
+#B   play speech
+#B   drive a motor
+
+
+
+#TODO: CANNED SENDERS
+
+#Canned senders might just be pre-rolled objects that you pass as a parameter
+#to a feed or a control, and it sorts all the wiring out for you.
+
+#?   when new data appears in file, send it
+#?   when new data appears in a database, send it
+#?   when this GPIO pin changes, send bool
+#?   when this new data comes in from a UART, send it
+#?   others
+
+
+
+
+
+# END

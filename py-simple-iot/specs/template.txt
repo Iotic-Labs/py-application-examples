@@ -1,0 +1,304 @@
+# template.txt  11/11/2016  D.J.Whale
+#
+# V7 working - numbering requirements for traceability
+
+# AREAS OF FUNCTIONAL FACILITY
+#
+# 1 signing up for an account (do in web UX)
+# 2 getting a device connected to Iotic Space
+# 3 interacting with values already in Iotic Space
+# 4 putting your own values into Iotic Space
+# 5 introducing meaning (NOT DONE)
+# 6 introducing context (NOT DONE)
+# 7 gatewaying non iotic (NOT DONE)
+# 9 hosting (mashapps in the cloud (NOT DONE)
+
+# PRIORITIES (These are contractual, please don't change)
+# A - minimum viable product, immediately useful, first delivery
+# B - step up from A, builds on min core of A, improved engagement, wider utility, second delivery
+# C - step up from C, builds on AB, more advanced, more specific, third delivery
+
+# NOT YET SPECIFIED (PRI D)
+#5D detailed metadata description?
+#5D detailed metadata querying
+#5D detailed metadata filtering based on results
+#34D multiple values per control/feed
+#2D multiple things per script
+#4D multiple control offers per thing
+#4D multiple feeds advertisements per thing
+#5D detailed use of search
+
+
+#----- CONNECTION TO IOTIC SPACE ----------------------------------------------
+#1A-1.1 signup comment: go to https://developer.iotic-labs.com/register/
+#1A-1.2 configuration (default to everything in default ini)
+#1A-1.3 identification (default to everything in default ini)
+#1A-1.4 authorisation
+#1A-1.5 handling authorisation success
+#1A-1.6 handling authorisation failure (default hidden action)
+#1A-1.7 connection
+#1A-1.8 handling connection failure (default hidden action)
+#1A-1.9 handling connection success
+#1A-1.10 handling later connection failure (default hidden action)
+
+#1B-2.1 configuration (override by setting ini file in code)
+#1B-2.2 identification (override by setting ini file in code)
+#1B-2.3 handling authorisation failure (override by adding code)
+#1B-2.4 handling connection failure (override by adding code)
+#1B-2.5 handling later connection failure (override by adding code)
+
+#1C-3.1 configuration (override by changing individual parameters in code)
+#1C-3.2 identification (override by changing individual parameters in code)
+#1C-3.3 detecting congestion
+#1C-3.4 handling congestion
+
+#----- PUBLISHING YOUR EXISTENCE (OWNER/THING) ---------------------------------------
+#5A-4.1 what is it called
+#5A-4.2 (confirm what public/hidden/private actually mean)
+#5A-4.3 making public
+#5A-4.4 making hidden
+
+#5B-5.1 set a location
+#5B-5.2 override default metadata
+
+#5C-6.1 what am I called
+#5C-6.2 making private (not yet available in underlying code?)
+#5C-6.3 more advanced metadata (Anything not covered in 30 minimal metadata)
+
+#===== FEEDS (USING OTHERS) ====================================================
+
+#----- FEEDS: FINDING STUFF FROM OTHERS ----------------------------------------------
+
+# NO A-7
+
+#3B-8.1 finding your own stuff by local id
+#5B-8.2 finding by label
+#5B-8.3 finding by location
+#5B-8.4 finding by proximity
+#5B-8.5 finding by purpose of single value (metadata)
+#5B-8.6 finding by tags
+#5B-8.7 show search results
+
+#3C-9.1 finding by globally unique id
+#5C-9.2 finding by purpose of single value (advanced metadata:Anything not covered in 30 minimal metadata)
+
+#----- FEEDS: PLUMBING UP TO STUFF FROM OTHERS ----------------------------------------
+#3A-10.1 understanding format of a single value provided by someones feed
+#3A-10.2 following someones feed
+#3A-10.3 unfollowing someones feed
+#3A-10.4 handling disappearance of someones feed
+#3A-10.5 auto-restoring any existing feed subscriptions to a single callback on start
+#3A-10.6 routing any new feed subscriptions while running to a single callback
+
+#3A-11.1 toggleable throttle to follow one feed only
+#3B-11.2 following a feed on stimulus
+
+#NO C-12
+
+#----- FEEDS: CONSUMING DATA FROM OTHERS ---------------------------------------------
+
+#3A-13.1 knitting a callback for any previously bound subscriptions (restore-cb-all)
+#3A-13.2 knitting a callback for any new subscriptions while running (follow-add-cb-all)
+#3A-13.3 unfollow other feeds when a new feed follow comes in (throttle) (or is this callback knitting?)
+#3A-13.4 being notified of incoming feed regardless of value (value empty or ignored)
+#3A-13.5 being notified of incoming feed single value
+#3A-13.6 unrolling and understanding feed single value
+#3A-13.7 processing feed single value
+
+#3B-14.1 selecting and handling a single value from a feed with multiple values
+#3B-14.2 following multiple feeds
+#3B-14.3 following feeds with multiple values
+
+#NO C-15
+
+#------ FEEDS: CANNED DATA CONSUMING PATTERNS ----------------------------------------
+#3A-16.1 incoming feed any single value causes any action(s)
+#3A-16.2 incoming feed single value causes any action(s)
+#3A-16.3 incoming feed single value, causes data display on console
+#5A-16.4 incoming feed single value, causes metadata display on console (what: thing label, feed label, value label)
+#5A-16.5 incoming feed, access timestamp of when message was sent
+#5A-16.6 incoming feed single value cause data type specific action(s) (DW: outside or inside callback?)
+
+#NO B-17
+
+#NO C-18
+
+#===== FEEDS (PRODUCING YOUR OWN) =============================================
+
+#----- FEEDS: PUBLISHING EXISTENCE ----------------------------------------------
+#4A-19.1 it's a feed
+#5A-19.2 what it is called
+#5A-19.3 how will the single value be formatted
+
+#5B-20.1 publishing your live location
+
+#5C-21.1 more advanced metadata (Anything not covered in 30 minimal metadata)
+
+#----- FEEDS: ALLOWING OTHERS TO PLUMB UP TO YOUR STUFF ------------------------------
+#4A-22.1 someone wants to follow your feed
+#4A-22.2 accepting all follow requests
+#4A-22.3 someone unfollows
+
+#4B-23.1 finding out more about the follow request
+#4B-23.2 accepting an individual follow request
+#4B-23.3 rejecting an individual follow request
+#4B-23.4 blocking an existing follower
+#4B-23.5 unblocking an existing follower
+
+#NO C-24.1
+
+#----- FEEDS: PRODUCING DATA FOR OTHERS ----------------------------------------------
+#4A-25.1 producing single value ready for sharing on your feed
+#4A-25.2 sharing a single value from your feed
+
+#NO B-26
+
+#NO C-27
+
+#----- FEEDS: CANNED DATA PRODUCING PATTERNS -----------------------------------------
+#4A-28.1 share feed single value on an interval
+#4A-28.2 enable sharing
+#4A-28.3 disable sharing
+
+#4B-29.1 increase or decrease rate of sharing
+#4B-29.2 share single value on a stimulus (event)
+#4B-29.3 share single value on a stimulus (polled)
+#7B-29.4 route mqtt single value to a feed share
+#7B-29.5 route nodered single value to a feed share
+#4B-29.6 share feed single value when a threshold is reached
+#4B-29.7 share a single value into a distributed iotic database
+
+#NO C-30
+
+#----- FEEDS: UNPUBLISHING YOUR EXISTENCE --------------------------------------------
+#NO A-31
+
+#4B-32.1 destroying your feed
+
+#NO C-33
+
+#===== CONTROLS (USING OTHERS) ================================================
+
+#----- CONTROLS: FINDING STUFF FROM OTHERS ----------------------------------------------
+
+#NO A-34
+
+#3B-35.1 finding your own stuff by local point id (lid)
+#5B-35.2 finding by label
+#5B-35.3 finding by location
+#5B-35.4 finding by proximity
+#5B-35.5 finding by purpose of single value (i.e. metadata search)
+#5B-35.6 finding by tags
+#5B-35.7 finding by basic metadata search
+#5B-35.8 show search results
+
+#3C-36.1 finding by globally unique point ID
+#5C-36.2 finding by advanced metadata search (Anything not covered in 30 minimal metadata)
+
+#----- CONTROLS: PLUMBING UP TO STUFF FROM OTHERS ----------------------------
+#3A-37.1 understanding format of a single value expected by someones control
+#3A-37.2 attaching to someones control
+#3A-37.3 detaching from someones control
+#3A-37.4 handling dissapearance of someones control
+
+
+#NO B-38
+
+#NO C-39
+
+#----- CONTROLS: PRODUCING DATA FOR OTHERS ----------------------------------------------
+#3A-40.1 producing single value ready to actuate someones control
+#3A-40.2 actuating someones control with a single value, non confirmed
+
+#3B-41.1 actuating someones control with a single value, confirmed
+#3B-41.2 handling confirmed actuation done
+#3B-41.3 handling confirmed actuation timeout
+
+#----- CONTROLS: CANNED DATA PRODUCING PATTERNS -----------------------------------------
+#3A-41.4 any user defined action actuates control with single value
+#3A-41.5 actuate control single value on an interval
+#3A-41.6 increase or decrease rate of actuating
+
+#3B-42.1 actuate single value on a stimulus (event)
+#3B-42.2 actuate single value on a stimulus (polled)
+#3B-42.3 actuate single value when a threshold is reached
+
+#7C-43.1 route mqtt single value to a control actuation
+#7C-43.2 route nodered single value to a control actuation
+#3C-43.3 actuate a single value into a distributed iotic database
+
+#===== CONTROLS (ALLOWING OTHERS TO USE YOURS) ================================
+
+#----- CONTROLS: PUBLISHING EXISTENCE -------------------------------------------
+#4A-44.1 it's a control
+#4A-44.2 what is it called
+#4A-44.3 how will the single value be formatted
+
+#4B-45.1 override defaults for metadata
+#5B-45.2 using more advanced metadata (Anything not covered in 30 minimal metadata)
+
+#NO C-46
+
+#----- CONTROLS: ALLOWING OTHERS TO PLUMB UP TO YOUR STUFF --------------------
+#4A-47.1 someone wants to attach to your control
+#4A-47.2 accepting all attachment requests
+#4A-47.3 someone detatches from your control
+
+#4B-48.1 finding out more about the attachment request
+#4B-48.2 accepting an individual attachment request
+#4B-48.3 rejecting an individual attachment request
+#4B-48.4 blocking an existing controller
+#4B-48.5 unblocking an existing controller
+
+#NO C-49
+
+#----- CONTROLS: CONSUMING DATA FROM OTHERS -----------------------------------
+#4A-50.1 auto-restoring to single callback on script start, for any existing control subscriptions
+#4A-50.2 auto-routing to single callback any new control subscriptions that come in while script running
+
+#4A-51.1 being notified of incoming control actuation regardless of value, unconfirmed
+#4A-51.2 being notified of incoming control actuation regardless of value, confirmed
+#4A-51.3 unrolling and understanding a control actuation single value
+#4A-51.4 processing actuation single value
+#4A-51.5 binding callback (restore) for all previously made attachments (restore-cb-all-attaches)
+#4A-51.6 binding callback (auto attach) for any new incoming attachment requests (auto-attach-cb)
+
+#4B-52.1 confirming a confirmable control actuation
+#4B-52.2 ignoring a confirmable control actuation
+
+#NO C-53
+
+#----- CONTROLS: CANNED DATA CONSUMING PATTERNS -------------------------------
+#4A-54.1 incoming control actuation value ignored causes action(s)
+#4A-54.2 incoming control actuation single value causes action(s)
+#4A-54.3 incoming control actuation single value displays value on console
+#5A-54.4 incoming control, access timestamp of when message was sent
+#5A-54.5 incoming control, data type selects data type specific action(s) (DW: outside or inside callback?)
+
+#NO B-55
+
+#NO C-56
+
+#----- CONTROLS: UNPUBLISHING YOUR EXISTENCE --------------------------------------------
+
+# NO A-57
+
+#4B-58 destroying your control
+
+#NO C-59
+
+#----- RUNNING AND STOPPING ---------------------------------------------------
+#2A-60.1 structuring a polled application where your code runs the main loop
+#2A-60.2 structuring an event driven application where iotic code runs the main loop
+#2A-60.3 something else runs the main loop (have access to it)
+#2A-60.4 something else runs the main loop (no access to it)
+#2A-60.5 disconnection when finished
+
+#NO B-61
+
+#NO C-62
+
+# END
+
+
+

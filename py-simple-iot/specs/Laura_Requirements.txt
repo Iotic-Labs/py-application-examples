@@ -1,0 +1,44 @@
+DEFINITION OF DONE:
+
+We are finished when it includes clearly defined separate sections for:
+
+
+1. following a feed (including processing and using data)
+
+2. advertising a feed (including generating and sharing data)
+
+3. binding to a control (including actuation trigger and actuation itself)
+
+4. offering a control (including being actuated, and the action performed on actuation)
+
+So an entire section can be deleted if not needed without affecting any of the others.
+
+E.g. if you don't want to follow any feeds, you can just delete the entire section related to following a feed.
+
+And so that is so obvious it is almost painful where people would 'plug-in' their own logic for:
+
+5. using data
+6. generating data
+7. triggering an action
+8. performing an action when actuated
+
+When it is:
+
+quick and clear for me to break down into component tutorials that combine to produce the completed template.
+
+quick and clear for me to add functionality to turn it from a template into a variety of working purposed demo Things
+
+And,
+
+When I run it:
+
+I can follow or control any other followable or controllable Thing with no further user input
+required than making a connection in a UI (using the current space UI for example) .
+
+I can be followed or controlled by any other Thing with no further user input required than a
+connection being made in a UI (using the current space UI for example).
+
+
+LAURA REVIEW 18/11/2016
+(some note about the thing name being based on the script name as an option
+so if you rename the script, you get a different thing, in the same agent??)

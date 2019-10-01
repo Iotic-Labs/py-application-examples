@@ -1,0 +1,91 @@
+RELEASE NOTE - Final delivery, Friday 20th Jan 2017
+
+SCOPE
+=====
+This is an executable specification for the Simple Iotic API.
+
+It's purpose is to demonstrate how a much simpler UX can be
+provided as a minimal coding interface with many automated
+defaults. This progresses linearly from a zero-line program
+(python3 iot.py) through a live coding experience with the
+python shell (python3, import iot) and then through scripted
+interaction. Complexity is designed to grow linearly as new features
+are introduced, until you end up in a fully multi-thing multi-point
+multi-script object oriented solution.
+
+You can run any number of independent Iotic scripts on the same machine.
+
+There is also a reasonably good knit-down to Iotic Space, using many
+moving parts and new features provided by Tim.
+All of those moving parts are inside iotic.py, which implements the generic
+API shared with the DBSpace local space test harness.
+
+The Iotic nature has been exercised via real Iotic Space, but only
+tested in a single agent running on a single machine. We have
+assumed that it is by one of the core design goals of Iotic Space,
+that there will be no difference when executing in multiple agents
+on multiple machines in multiple locations.
+
+
+ADDED IN THIS RELEASE
+=====================
++ Iotic Space working
+
+
+REMOVED IN THIS RELEASE
+=======================
+- template.py was removed.
+
+It's too hard to make this executable due to the 'has everything'
+mode of that file.
+
+This has been replaced with test_iot.py which sandboxes each conceptual
+example and test into a separately runnable function, that can
+be initiated by putting the function name on the command line.
+This is a much more controlled test environment, that means
+you don't have to 'undo' a lot of in-RAM state from a
+previous test, in order to make the next test work.
+
+
+OBSERVATIONS
+============
+There were quite a few points where it was hard to knit to IoticSpace,
+and Tim had to add a lot of extra logic and local tables into iotic.py
+to make it work properly. Perhaps some or all of this should be
+refactored into the IoticAgent - there seems to be far too much
+table lookup and address translation going on, and there are multiple
+ways to refer to items with lids and id's. It seems that all of that
+translation should be handled transparently by the IoticAgent,
+with appropriate lookup and list services, it makes the agent very
+hard to engage with without that.
+
+The desire from the upper iot.py is to have something as simple
+as IP addressing with DNS - you either use a globally unique id
+for something, or you use it's friendly name. The subsId scheme
+is very hard to work with, because locally you want to route
+to the same address that you created the item from, and not
+have to convert yet another id somehow back into this address.
+
+
+TESTING PERFORMED
+=================
+all tests in test_iot.py executed.
+
+
+KNOWN ISSUES
+============
+def example1b():   FAIL - new_follower/lost_follower not working
+def example1c():   FAIL - new_attacher/lost_attacher not working
+def test8():       FAIL new_attacher not working
+def test10():      FAIL (although it fails in local space too)
+
+Only one side of the bound message seems to be routed to handlers,
+which means that the have_bound (binding end) handler gets called
+but the new_binding (new_follower/new_attacher) service end
+handler does not get called. I suspect this is due to the complexities
+added by the subsId which is too many levels abstracted away from
+the guid of the point/thing you are interacting with. This feature
+works fine in LocalSpace, which is an ideal reference for how
+things should work properly.
+
+END.
