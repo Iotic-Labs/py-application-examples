@@ -14,6 +14,33 @@ from IoticAgent.Core.compat import monotonic
 from IoticAgent.ThingRunner import RetryingThingRunner
 from IoticAgent import Datatypes, Units
 
+from rdflib.namespace import Namespace, RDF
+
+'''
+These are semantic examples. Choose your own ontologies. In this example,
+we imagine this definition of the iotics:category property in the
+/examples/ ontology...
+
+iotics:category
+    rdf:type rdf:Property ;
+    rdfs:range iotics:Category  .
+
+...and in the /example/categories, this definition of iotics:Category
+as a skos:Concept, and iotics_category:Example as a subclass of iotics:Category
+
+iotics:Category
+    rdf:type skos:Concept .
+
+iotics_category:Example
+    rdfs:subclassof iotics:Category .
+
+'''
+IOTICS_NS = "http://iotics.com/example/"
+IOTICS = Namespace(IOTICS_NS)
+
+IOTICS_CATEGORIES_NS = "http://iotics.com/example/categories#"
+IOTICS_CATEGORIES = Namespace(IOTICS_CATEGORIES_NS)
+
 
 class ShareBasic(RetryingThingRunner):
     LOOP_TIMER = 10  # minimum number of seconds duration of the main loop
@@ -35,6 +62,8 @@ class ShareBasic(RetryingThingRunner):
             meta.set_label('share basic label')
             meta.set_description('share basic description')
             meta.set_location(52.2053, 0.1218)  # Cambridge as an example
+
+        self.__thing.create_property((IOTICS.category, IOTICS_CATEGORIES.Example))
 
         self.__thing.create_tag(['test', 'example'])
 
@@ -59,6 +88,7 @@ class ShareBasic(RetryingThingRunner):
             start = monotonic()
             # loop code in here
             templ_feed.values.count = randint(50, 100)
+            logger.debug("Sharing value: %s", templ_feed.values.count)
             self.__feed.share(templ_feed)
             stop = monotonic()
             if self.wait_for_shutdown(max(0, self.LOOP_TIMER - (stop - start))):

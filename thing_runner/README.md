@@ -100,7 +100,16 @@ working.
 
 ### Following by search (owned and global)
 [search owned](./follow_feed/follow_search_local.py), Creates a Thing in `on_startup()` and then uses
-`client.search(search_text, scope=SearchScope.LOCAL_OWN)` to get a list of things it owns.
+`client.search(search_text, scope=SearchScope.LOCAL_OWN)` to get a list of things it owned by the same owner that match the text.
+It then binds to the first thing's feed.
+`NOTE` Requires [basic share](./follow_feed/share_basic.py) to be running to work
+
+[search owned: by property](./follow_feed/follow_search_local_property.py), Creates a Thing in `on_startup()` and then uses
+`client.search_property(predicate, scope=SearchScope.LOCAL_OWN)` to get a list of things owned by the same owner.
+This search is *by property*, i.e. using the semantic properties in the additional metadata of the thing to find it.
+This example is contrived, but uses matching on a example category in a taxonomy of categories.
+Predicates are specified using python tuples of predicate and object (IOTICS.category, IOTICS_CATEGORIES.Example)
+
 It then binds to the first thing's feed.
 `NOTE` Requires [basic share](./follow_feed/share_basic.py) to be running to work
 
@@ -109,10 +118,47 @@ It then binds to the first thing's feed.
 It then binds to the first thing's feed.
 `NOTE` Requires [basic share](./follow_feed/share_basic.py) to be running to work
 
+[search global: by property](./follow_feed/follow_search_global_property.py), Creates a Thing in `on_startup()` and then uses
+`client.search_property(predicate, scope=SearchScope.LOCAL_OWN)` to get a list of things
+This search is *by property*, i.e. using the semantic properties in the additional metadata of the thing to find it.
+This example is contrived, but uses matching on a example category in a taxonomy of categories.
+Predicates are specified using python tuples of predicate and object e.g. (IOTICS.category, IOTICS_CATEGORIES.Example)
+
+## Note on Semantics
+Recent releases of Iotic Space and the agent have added a few new API methods to add and remove semantic triples from things.
+These changes have been added in example form to [basic share](./follow_feed/share_basic.py), and to
+the [search global: by property](./follow_feed/follow_search_global_property.py)
+and [search owned: by property](./follow_feed/follow_search_local_property.py) examples.
+
+- [basic share](./follow_feed/share_basic.py) adds a call to `Thing.create_property()` to add a semantic triple to describe the thing
+- [search global: by property](./follow_feed/follow_search_global_property.py) and [search owned: by property](./follow_feed/follow_search_local_property.py)
+use this triple to search for the thing (using `Client.search_property()`), yielding more accurate results than text-based search.
+
+The semantics used in the examples are "fake" in that the ontologies don't exist, but show you a way to create a category for your things.
+
+We imagine this definition of the `iotics:category` property in the
+/examples/ ontology...
+
+```
+iotics:category
+    rdf:type rdf:Property ;
+    rdfs:range iotics:category .
+```
+
+...and in the /example/categories, this definition of iotics_categories:Example
+as a skos:Concept.
+
+```
+iotics_categories:Example
+    rdf:type skos:Concept .
+```
 
 ## Dependencies
 All examples require the Iotic Agent
 `pip3 install py-IoticAgent`
+
+Property examples require RDFLib to handle the semantic namespaces. It should be included in py-IoticAgent, but just in case...
+`pip3 install rdflib`
 
 The database example requires
 - SQLite3 (see [here](http://www.sqlitetutorial.net/download-install-sqlite/) )
