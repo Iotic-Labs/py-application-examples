@@ -78,5 +78,6 @@ class FollowBasicRecent(RetryingThingRunner):
 def main():
     FollowBasicRecent(config="agent2.ini").run()
 
+
 if __name__ == '__main__':
     main()

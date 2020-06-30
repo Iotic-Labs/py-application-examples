@@ -71,5 +71,6 @@ class FollowBasicCatchall(RetryingThingRunner):
 def main():
     FollowBasicCatchall(config="agent2.ini").run()
 
+
 if __name__ == '__main__':
     main()

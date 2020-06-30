@@ -39,8 +39,8 @@ class ShareBasicError(RetryingThingRunner):
             if issubclass(exc_info[0], DemoException):
                 logger.debug("DemoException happened, ok to carry on")
                 return True
-            else:
-                return False
+
+        return False
 
     def on_startup(self):
         """Called once at the beginning, before main().
@@ -92,6 +92,7 @@ class ShareBasicError(RetryingThingRunner):
 
 def main():
     ShareBasicError(config="agent1.ini").run()
+
 
 if __name__ == '__main__':
     main()

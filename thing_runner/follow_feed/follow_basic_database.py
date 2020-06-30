@@ -203,5 +203,6 @@ class FollowBasicDatabase(RetryingThingRunner):
 def main():
     FollowBasicDatabase(config="agent2.ini").run()
 
+
 if __name__ == '__main__':
     main()

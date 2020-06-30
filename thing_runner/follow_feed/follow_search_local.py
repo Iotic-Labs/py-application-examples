@@ -76,5 +76,6 @@ class FollowSearchLocal(RetryingThingRunner):
 def main():
     FollowSearchLocal(config="agent2.ini").run()
 
+
 if __name__ == '__main__':
     main()

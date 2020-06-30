@@ -69,5 +69,6 @@ class FollowBasicRestore(RetryingThingRunner):
 def main():
     FollowBasicRestore(config="agent2.ini").run()
 
+
 if __name__ == '__main__':
     main()

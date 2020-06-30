@@ -59,5 +59,6 @@ class FollowBasic(RetryingThingRunner):
 def main():
     FollowBasic(config="agent2.ini").run()
 
+
 if __name__ == '__main__':
     main()

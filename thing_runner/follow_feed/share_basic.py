@@ -14,27 +14,8 @@ from IoticAgent.Core.compat import monotonic
 from IoticAgent.ThingRunner import RetryingThingRunner
 from IoticAgent import Datatypes, Units
 
-from rdflib.namespace import Namespace, RDF
+from rdflib.namespace import Namespace
 
-'''
-These are semantic examples. Choose your own ontologies. In this example,
-we imagine this definition of the iotics:category property in the
-/examples/ ontology...
-
-iotics:category
-    rdf:type rdf:Property ;
-    rdfs:range iotics:Category  .
-
-...and in the /example/categories, this definition of iotics:Category
-as a skos:Concept, and iotics_category:Example as a subclass of iotics:Category
-
-iotics:Category
-    rdf:type skos:Concept .
-
-iotics_category:Example
-    rdfs:subclassof iotics:Category .
-
-'''
 IOTICS_NS = "http://iotics.com/example/"
 IOTICS = Namespace(IOTICS_NS)
 
@@ -97,6 +78,7 @@ class ShareBasic(RetryingThingRunner):
 
 def main():
     ShareBasic(config="agent1.ini").run()
+
 
 if __name__ == '__main__':
     main()

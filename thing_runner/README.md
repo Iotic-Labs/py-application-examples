@@ -134,26 +134,34 @@ and [search owned: by property](./follow_feed/follow_search_local_property.py) e
 - [search global: by property](./follow_feed/follow_search_global_property.py) and [search owned: by property](./follow_feed/follow_search_local_property.py)
 use this triple to search for the thing (using `Client.search_property()`), yielding more accurate results than text-based search.
 
-The semantics used in the examples are "fake" in that the ontologies don't exist, but show you a way to create a category for your things.
+The semantics used in the examples are simulated in that the ontologies don't exist, but show you a way to create a category for your things.
 
-We imagine this definition of the `iotics:category` property in the
-/examples/ ontology...
+We imagine this definition of the iotics:category property in one ontology with this definition of iotics:Category as a skos:Concept
 
 ```
 iotics:category
     rdf:type rdf:Property ;
-    rdfs:range iotics:category .
-```
+    rdfs:range iotics:Category  .
 
-...and in the /example/categories, this definition of iotics_categories:Example
-as a skos:Concept.
-
-```
-iotics_categories:Example
+iotics:Category
     rdf:type skos:Concept .
 ```
 
-## Dependencies
+...and in another ontology many definitions of categories as a subclasses of iotics:Category
+
+```
+iotics_category:Example
+    rdfs:subclassof iotics:Category .
+
+iotics_category:Weather
+    rdfs:subclassof iotics:Category .
+
+iotics_category:Civic
+    rdfs:subclassof iotics:Category .
+
+```
+
+# Dependencies
 All examples require the Iotic Agent
 `pip3 install py-IoticAgent`
 

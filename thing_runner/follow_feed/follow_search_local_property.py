@@ -13,23 +13,10 @@ from IoticAgent.ThingRunner import RetryingThingRunner
 from IoticAgent import Datatypes, Units
 from IoticAgent.IOT.Exceptions import IOTUnknown
 from IoticAgent.Core.Const import SearchScope
-from rdflib.namespace import Namespace, RDF
+from rdflib.namespace import Namespace
 
 KEY_FEED = "Feed"
 
-'''These are semantic examples. Choose your own ontologies. In this example,
-we imagine this definition of the iotics:category property in the
-/examples/ ontology...
-iotics:category
-    rdf:type rdf:Property ;
-    rdfs:range iotics:category ;
-    .
-
-...and in the /example/categories, this definition of iotics_categories:Example
-as a skos:Concept.
-iotics_categories:Example
-    rdf:type skos:Concept .
-'''
 IOTICS_NS = "http://iotics.com/example/"
 IOTICS = Namespace(IOTICS_NS)
 
@@ -95,6 +82,7 @@ class FollowSearchLocalProperty(RetryingThingRunner):
 
 def main():
     FollowSearchLocalProperty(config="agent2.ini").run()
+
 
 if __name__ == '__main__':
     main()

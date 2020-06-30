@@ -83,5 +83,6 @@ class FollowBasicSubscription(RetryingThingRunner):
 def main():
     FollowBasicSubscription(config="agent2.ini").run()
 
+
 if __name__ == '__main__':
     main()
